@@ -1,0 +1,40 @@
+{
+  "projects": [
+    {
+      "name": "PetDeliveryCE",
+      "urls": [
+        {
+          "label": "Frontend (Vercel)",
+          "url": ""
+        },
+        {
+          "label": "API (Render)",
+          "url": "",
+          "heal": true
+        }
+      ],
+      "github": "620511/petdeliveryCE",
+      "vercelProject": "",
+      "renderServiceId": "",
+      "renderDeployHookEnv": "HOOK_PETDELIVERYCE"
+    },
+    {
+      "name": "Farma.APP",
+      "urls": [
+        {
+          "label": "Frontend (Vercel)",
+          "url": ""
+        },
+        {
+          "label": "API (Render)",
+          "url": "",
+          "heal": true
+        }
+      ],
+      "github": "",
+      "vercelProject": "",
+      "renderServiceId": "",
+      "renderDeployHookEnv": "HOOK_FARMA_APP"
+    }
+  ]
+}

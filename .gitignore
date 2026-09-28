@@ -1,0 +1,5 @@
+.env
+state.json
+status.html
+alertas.log
+node_modules

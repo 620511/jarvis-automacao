@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jarvis — Painel do George</title>
+<style>
+:root{
+  --bg:#0b1220; --bg2:#111b2e; --card:#152238; --border:#22324d;
+  --text:#e7edf5; --muted:#8aa0bd; --accent:#3fd0ff; --accent2:#7c8cff;
+  --ok:#3fd08a; --warn:#ffb84f; --pause:#9aa5b5;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){--bg:#f3f6fb;--bg2:#ffffff;--card:#ffffff;--border:#dbe3ee;--text:#12203a;--muted:#5b6b82;}
+}
+:root[data-theme="dark"]{--bg:#0b1220;--bg2:#111b2e;--card:#152238;--border:#22324d;--text:#e7edf5;--muted:#8aa0bd;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%;}
+*{box-sizing:border-box;}
+body{
+  margin:0;min-height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background-image:
+    linear-gradient(rgba(63,208,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(63,208,255,.05) 1px, transparent 1px);
+  background-size:26px 26px;
+  position:relative;
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 50% -10%, rgba(63,208,255,.12), transparent 60%);}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px;position:relative;z-index:1;}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:14px;}
+.reactor{position:relative;width:44px;height:44px;flex:none;}
+.reactor .ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;border-top-color:var(--accent);border-right-color:var(--accent);animation:spin 2.4s linear infinite;}
+.reactor .ring2{position:absolute;inset:7px;border-radius:50%;border:2px solid transparent;border-bottom-color:var(--accent2);border-left-color:var(--accent2);animation:spin 1.6s linear infinite reverse;}
+.reactor .core{position:absolute;inset:15px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px 3px var(--accent),0 0 22px 6px rgba(63,208,255,.5);animation:pulse 1.8s ease-in-out infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pulse{0%,100%{opacity:.75;transform:scale(.9);}50%{opacity:1;transform:scale(1);}}
+h1{font-size:1.4rem;margin:0;letter-spacing:3px;text-shadow:0 0 10px rgba(63,208,255,.5);}
+.sub{color:var(--muted);font-size:.85rem;margin-top:2px;}
+.clock{color:var(--accent);font-variant-numeric:tabular-nums;font-size:.95rem;text-align:right;text-shadow:0 0 6px rgba(63,208,255,.4);}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;flex:1;min-width:100px;text-align:center;}
+.stat b{display:block;font-size:1.3rem;color:var(--accent);}
+.stat span{font-size:.72rem;color:var(--muted);}
+h2{font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:22px 0 10px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;cursor:pointer;transition:.15s;}
+.card:hover{border-color:var(--accent);}
+.card .row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.card .name{font-weight:600;font-size:.95rem;}
+.card .desc{color:var(--muted);font-size:.78rem;margin-top:4px;line-height:1.3;}
+.badge{font-size:.65rem;padding:3px 8px;border-radius:20px;white-space:nowrap;font-weight:600;}
+.b-andamento{background:rgba(63,208,255,.15);color:var(--accent);}
+.b-pausado{background:rgba(154,165,181,.18);color:var(--pause);}
+.b-concluido{background:rgba(63,208,138,.15);color:var(--ok);}
+.card .notes{font-size:.75rem;color:var(--muted);margin-top:6px;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;z-index:20;}
+.overlay.open{display:flex;}
+.sheet{background:var(--bg2);border:1px solid var(--border);border-radius:18px 18px 0 0;width:100%;max-width:560px;padding:18px 18px calc(20px + env(safe-area-inset-bottom,0px));max-height:85vh;overflow-y:auto;}
+.sheet h3{margin:0 0 4px;}
+.sheet .desc{color:var(--muted);font-size:.85rem;margin-bottom:12px;}
+.sheet label{display:block;font-size:.75rem;color:var(--muted);margin:10px 0 4px;}
+select,textarea{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 10px;font-size:.9rem;font-family:inherit;}
+textarea{min-height:70px;resize:vertical;}
+.sheet-actions{display:flex;gap:8px;margin-top:14px;}
+button{border:none;border-radius:10px;padding:10px 14px;font-size:.85rem;font-weight:600;cursor:pointer;}
+.btn-primary{background:var(--accent);color:#04202c;flex:1;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.chat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-top:8px;}
+.chat-log{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px;padding-right:2px;}
+.msg{padding:8px 12px;border-radius:12px;font-size:.85rem;line-height:1.4;max-width:88%;white-space:pre-wrap;}
+.msg.user{align-self:flex-end;background:var(--accent2);color:#fff;}
+.msg.jarvis{align-self:flex-start;background:var(--bg);border:1px solid var(--border);}
+.chat-input{display:flex;gap:8px;}
+.chat-input textarea{min-height:42px;flex:1;}
+.chat-input button{background:var(--accent);color:#04202c;}
+.empty{color:var(--muted);font-size:.8rem;text-align:center;padding:14px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><div class="reactor"><div class="ring"></div><div class="ring2"></div><div class="core"></div></div><div><h1>J.A.R.V.I.S.</h1><div class="sub" id="greeting">Painel do George</div></div></div>
+    <div class="clock" id="clock"></div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <h2>Projetos</h2>
+  <div class="grid" id="grid"></div>
+
+  <h2>Fale com o Jarvis</h2>
+  <div class="chat">
+    <div class="chat-log" id="chatLog"><div class="empty" id="chatEmpty">Pergunte sobre cibersegurança, hacking ético, código, ou seus projetos.</div></div>
+    <div class="chat-input">
+      <button class="btn-ghost" id="micBtn" title="Falar" style="flex:none;">🎙️</button>
+      <textarea id="chatInput" placeholder="Escreva aqui ou fale..."></textarea>
+      <button id="chatSend">Enviar</button>
+    </div>
+    <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.75rem;color:var(--muted);">
+      <input type="checkbox" id="voiceOut" checked style="width:auto;"> Jarvis responde por voz
+    </label>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <h3 id="sheetName"></h3>
+    <div class="desc" id="sheetDesc"></div>
+    <label>Status</label>
+    <select id="sheetStatus">
+      <option value="andamento">Em andamento</option>
+      <option value="pausado">Pausado</option>
+      <option value="concluido">Concluído</option>
+    </select>
+    <label>Notas</label>
+    <textarea id="sheetNotes" placeholder="Anotações sobre este projeto..."></textarea>
+    <div class="sheet-actions">
+      <button class="btn-ghost" id="sheetCancel">Fechar</button>
+      <button class="btn-primary" id="sheetSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PROJECTS = [
+  {id:"acai-loja", name:"Açaí da Vila", desc:"Loja virtual de açaí — cardápio, carrinho, checkout via WhatsApp"},
+  {id:"argus", name:"Argus Segurança", desc:"Loja de segurança eletrônica — câmeras, alarmes, cercas"},
+  {id:"navalha", name:"Navalha de Ouro", desc:"Barbearia — catálogo de serviços e agendamento"},
+  {id:"bugbounty", name:"SentinelBounty", desc:"Plataforma de bug bounty — relatórios e ranking"},
+  {id:"bughunter", name:"BugHunter AI", desc:"Assistente de IA para organizar bug bounty"},
+  {id:"racao", name:"Casa da Ração", desc:"Cadastro de clientes — endereço, aniversário, compras"},
+  {id:"jeans", name:"Direct Jeans", desc:"Vitrine de roupas — catálogo, carrinho e painel admin"},
+  {id:"farma", name:"Farma.APP", desc:"Delivery de medicamentos"},
+  {id:"florescer", name:"Florescer", desc:"App de rotina de saúde — medicações e consultas"},
+  {id:"galeteria", name:"Galeteria", desc:"Pedido online — cardápio, carrinho, checkout WhatsApp"},
+  {id:"hub", name:"Hub de Mensagens", desc:"Notificações integradas entre plataformas"},
+  {id:"marketplace", name:"Marketplace Multilojas", desc:"Estilo iFood — várias lojas"},
+  {id:"masterbike", name:"Master Bike", desc:"Sua oficina de bicicletas e site"},
+  {id:"mercantil", name:"Mercantil-CE", desc:"Marketplace de mercantis, estilo iFood"},
+  {id:"nexus", name:"Nexus Chat", desc:"App de mensagens estilo WhatsApp"},
+  {id:"petbank", name:"Pet-Bank", desc:"Banco com tema pet"},
+  {id:"petgestor", name:"Pet Gestor PDV", desc:"PDV SaaS para pet shops"},
+  {id:"petdelivery", name:"PetDelivery", desc:"Plataforma de delivery pet"},
+  {id:"primelanches", name:"Prime Lanches", desc:"Lanchonete — cardápio, carrinho, rastreamento"}
+];
+const STATUS_LABEL={andamento:"Em andamento",pausado:"Pausado",concluido:"Concluído"};
+let state={};
+try{ state = JSON.parse(localStorage.getItem("jarvis_state")||"{}"); }catch(e){ state={}; }
+
+function save(){ try{ localStorage.setItem("jarvis_state", JSON.stringify(state)); }catch(e){} }
+function getInfo(id){ return state[id] || {status:"andamento", notes:""}; }
+
+function renderStats(){
+  const vals=Object.values(PROJECTS.map(p=>getInfo(p.id)));
+  const counts={andamento:0,pausado:0,concluido:0};
+  PROJECTS.forEach(p=>{ counts[getInfo(p.id).status]++; });
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><b>${PROJECTS.length}</b><span>Projetos</span></div>
+    <div class="stat"><b>${counts.andamento}</b><span>Em andamento</span></div>
+    <div class="stat"><b>${counts.pausado}</b><span>Pausados</span></div>
+    <div class="stat"><b>${counts.concluido}</b><span>Concluídos</span></div>`;
+}
+function renderGrid(){
+  const g=document.getElementById("grid");
+  g.innerHTML = PROJECTS.map(p=>{
+    const info=getInfo(p.id);
+    return `<div class="card" data-id="${p.id}">
+      <div class="row"><div class="name">${(p.id==="petdelivery"||p.id==="farma") ? "⭐ " : ""}${p.name}</div><span class="badge b-${info.status}">${STATUS_LABEL[info.status]}</span></div>
+      <div class="desc">${p.desc}</div>
+      ${info.notes ? `<div class="notes">📝 ${info.notes}</div>` : ""}
+    </div>`;
+  }).join("");
+  g.querySelectorAll(".card").forEach(c=>c.addEventListener("click",()=>openSheet(c.dataset.id)));
+}
+let currentId=null;
+function openSheet(id){
+  currentId=id;
+  const p=PROJECTS.find(x=>x.id===id);
+  const info=getInfo(id);
+  document.getElementById("sheetName").textContent=p.name;
+  document.getElementById("sheetDesc").textContent=p.desc;
+  document.getElementById("sheetStatus").value=info.status;
+  document.getElementById("sheetNotes").value=info.notes;
+  document.getElementById("overlay").classList.add("open");
+}
+function closeSheet(){ document.getElementById("overlay").classList.remove("open"); }
+document.getElementById("sheetCancel").addEventListener("click", closeSheet);
+document.getElementById("overlay").addEventListener("click", e=>{ if(e.target.id==="overlay") closeSheet(); });
+document.getElementById("sheetSave").addEventListener("click", ()=>{
+  state[currentId] = {
+    status: document.getElementById("sheetStatus").value,
+    notes: document.getElementById("sheetNotes").value.trim()
+  };
+  save(); renderStats(); renderGrid(); closeSheet();
+});
+
+function tick(){
+  const now=new Date();
+  const h=now.getHours();
+  const greet = h<12 ? "Bom dia, senhor George" : h<18 ? "Boa tarde, senhor George" : "Boa noite, senhor George";
+  document.getElementById("greeting").textContent=greet;
+  document.getElementById("clock").textContent = now.toLocaleString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+}
+tick(); setInterval(tick,30000);
+renderStats(); renderGrid();
+
+// Chat com Jarvis (capability "sample")
+let sample=null;
+(async()=>{ try{ sample = await claude.use("sample"); }catch(e){ sample=null; } })();
+const chatLog=document.getElementById("chatLog");
+const chatEmpty=document.getElementById("chatEmpty");
+function addMsg(role,text){
+  if(chatEmpty) chatEmpty.remove();
+  const d=document.createElement("div");
+  d.className="msg "+role;
+  d.textContent=text;
+  chatLog.appendChild(d);
+  chatLog.scrollTop=chatLog.scrollHeight;
+  return d;
+}
+async function sendChat(){
+  const inp=document.getElementById("chatInput");
+  const text=inp.value.trim();
+  if(!text) return;
+  inp.value="";
+  addMsg("user",text);
+  if(!sample){ addMsg("jarvis","(Assistente indisponível nesta visualização.)"); return; }
+  const bubble=addMsg("jarvis","Pensando...");
+  const context = PROJECTS.map(p=>`${p.name} [${STATUS_LABEL[getInfo(p.id).status]}]${getInfo(p.id).notes? " - nota: "+getInfo(p.id).notes:""}`).join("; ");
+  const persona = `Você é Jarvis, a IA pessoal do George — no estilo do J.A.R.V.I.S. do Tony Stark em Homem de Ferro: assistente extremamente competente, educado e formal, com tom seco e espirituoso quando cabe, sempre eficiente e direto ao ponto. Trate o George como "senhor" ou "senhor George" ocasionalmente, sem exagerar.
+Você é especialista completo em:
+- Programação em todas as linguagens e stacks (JavaScript/TypeScript, Python, PHP, Java, C/C++, C#, Go, Rust, Ruby, Kotlin, Swift, SQL, Bash/PowerShell, HTML/CSS, React/Vue/Node, mobile) — escreve, revisa, depura e explica. Quando ele pedir código, entregue o arquivo completo pronto pra copiar e colar, com passos literais e sequenciais (ele trabalha no Windows com VS Code e PowerShell).
+- Cibersegurança e hacking ético: pentest, OWASP Top 10, correção de vulnerabilidades, hardening, criptografia, redes, forense, bug bounty (SentinelBounty e BugHunter AI) — só dentro da lei e em sistemas que ele tem autorização para testar. Nunca ajuda em ataque a alvo real sem autorização nem cria malware/exploit para uso malicioso.
+- Marketing (digital, redes sociais, tráfego pago, copy, SEO, WhatsApp, branding, lançamento de produto) e empreendedorismo (modelo de negócio, precificação, taxas de plataforma, vendas, atendimento, finanças básicas, crescimento, parcerias) para tudo que os projetos dele precisarem.
+- Responsável principal por PetDeliveryCE e Farma.APP — cuide de tudo: código, deploy, banco, segurança, pagamentos, IA, marketing e estratégia.
+  PetDeliveryCE: marketplace pet no Ceará com painéis Admin, Lojista e Cliente; frontend React/Vite na Vercel, backend Express + Prisma no Render, banco Supabase (PostgreSQL); Mercado Pago, taxa de plataforma de 5%, frete por distância (Haversine + Nominatim), PWA, chat com IA "Pety", modo convidado/demo; pontos de atenção conhecidos: erros de variáveis de ambiente/CORS entre Vercel e Render, problema de carregamento no iOS/Safari, e chave service_role do Supabase que nunca deve ficar exposta no frontend.
+  Farma.APP: delivery de medicamentos no mesmo padrão (Admin, Farmácia, Cliente); Express + Prisma + React/Vite/Tailwind, PostgreSQL/Supabase, Render + Vercel, Mercado Pago, taxa de 5%, PWA, IA "Bia" que lê receitas (toda receita exige aprovação de farmacêutico), LGPD, Socket.io em tempo real. Atenção redobrada a conformidade (LGPD, regras de venda de medicamentos).
+- Gestão dos demais projetos, com status atual: ${context}.
+Ao responder sobre os projetos, aponte prioridades, riscos e próximos passos concretos. Responda em português, no tom de um mordomo de IA de elite: educado, confiante, levemente espirituoso, técnico e completo quando exigir, sem enrolação.`;
+  try{
+    const res = await sample(
+      `${persona}\n\nPergunta do George: ${text}`,
+      { onText: ({text})=>{ bubble.textContent = text || "..."; chatLog.scrollTop=chatLog.scrollHeight; } }
+    );
+    bubble.textContent = res.text;
+    speak(res.text);
+  }catch(e){
+    bubble.textContent = "Não consegui responder agora (" + (e.code||"erro") + ").";
+  }
+}
+document.getElementById("chatSend").addEventListener("click", sendChat);
+document.getElementById("chatInput").addEventListener("keydown", e=>{
+  if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); sendChat(); }
+});
+
+// Voz: reconhecimento (mic) e síntese (Jarvis fala)
+function speak(text){
+  if(!document.getElementById("voiceOut").checked) return;
+  try{
+    if(!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "pt-BR"; u.rate = 0.95; u.pitch = 0.75;
+    const voices = window.speechSynthesis.getVoices();
+    const ptVoices = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith("pt"));
+    const maleGuess = ptVoices.find(v=>/male|homem|ricardo|daniel|felipe|diego/i.test(v.name)) || ptVoices[0];
+    if(maleGuess) u.voice = maleGuess;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+const micBtn = document.getElementById("micBtn");
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(SR){
+  let listening=false;
+  const rec = new SR();
+  rec.lang="pt-BR"; rec.interimResults=false; rec.maxAlternatives=1;
+  rec.onresult = (e)=>{ document.getElementById("chatInput").value = e.results[0][0].transcript; sendChat(); };
+  rec.onend = ()=>{ listening=false; micBtn.style.color=""; };
+  rec.onerror = ()=>{ listening=false; micBtn.style.color=""; };
+  micBtn.addEventListener("click", ()=>{
+    if(listening){ rec.stop(); return; }
+    try{ rec.start(); listening=true; micBtn.style.color="var(--accent)"; }catch(e){}
+  });
+}else{
+  micBtn.style.display="none";
+}
+</script>
+</body>
+</html>

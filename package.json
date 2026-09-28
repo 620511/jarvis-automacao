@@ -1,0 +1,15 @@
+{
+  "name": "jarvis-automacao",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "J.A.R.V.I.S. - monitoramento e automacao do PetDeliveryCE e Farma.APP",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "configurar": "node configurar.mjs",
+    "start": "node jarvis-agent.mjs",
+    "watch": "node jarvis-agent.mjs --watch",
+    "teste": "node jarvis-agent.mjs --teste",
+    "report": "node jarvis-agent.mjs --report"
+  }
+}
